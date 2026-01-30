@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Utility Suite - Local Processing</title>
+    
+    <!-- CDN Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .privacy-banner {
+            background: rgba(255, 255, 255, 0.95);
+            border-left: 4px solid #10b981;
+            padding: 8px 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+        
+        .privacy-banner::before {
+            content: "🔒";
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+        
+        .privacy-banner strong {
+            color: #10b981;
+        }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .tab-button {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            color: #333;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateX(5px);
+        }
+        
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tool-section {
+            margin-bottom: 30px;
+        }
+        
+        .tool-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        input[type="file"],
+        input[type="number"],
+        input[type="range"],
+        select {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="file"]:focus,
+        input[type="number"]:focus,
+        input[type="range"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="file"] {
+            flex: 1;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+        
+        .file-name {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .secondary-button {
+            background: #10b981;
+        }
+        
+        .secondary-button:hover {
+            background: #059669;
+        }
+        
+        .range-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+        }
+        
+        .slider-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .status-message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        
+        .progress-container {
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .preview-container {
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        canvas {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .logo-preview {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            overflow: hidden;
+        }
+        
+        .logo-preview img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            color: #333;
+        }
+        
+        .info-box strong {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: row;
+                gap: 8px;
+                flex-wrap: wrap;
+                position: static;
+            }
+            
+            .tab-button {
+                padding: 10px 12px;
+                font-size: 12px;
+                flex: 1;
+                min-width: 100px;
+            }
+            
+            .tab-content {
+                padding: 20px;
+            }
+            
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📄 PDF Utility Suite</h1>
+            <p>All processing happens locally in your browser - your files never leave your system</p>
+        </header>
+        
+        <div class="privacy-banner">
+            <div>
+                <strong>🔒 Privacy First:</strong> This application processes all files directly in your browser. 
+                No data is sent to any server. Your files remain completely private.
+            </div>
+        </div>
+        
+        <div class="main-layout">
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('convert-to-image')">
+                � Make PDF Text Non-Selectable
+            </button>
+            <button class="tab-button" onclick="switchTab('overlay-logo')">
+                🎨 Overlay Logo
+            </button>
+            <button class="tab-button" onclick="switchTab('replace-pages')">
+                🔄 Replace Pages
+            </button>
+            <button class="tab-button" onclick="switchTab('insert-page')">
+                ➕ Insert Page
+            </button>
+            <button class="tab-button" onclick="switchTab('doc-to-md')">
+                📝 Document to Markdown
+            </button>
+            <button class="tab-button" onclick="switchTab('md-to-pdf')">
+                📄 Markdown to PDF
+            </button>
+        </div>
+        
+        <!-- Tab 1: Make PDF Text Non-Selectable -->
+        <div id="convert-to-image" class="tab-content active">
+            <div class="tool-section">
+                <h2>Convert PDF to Non-Selectable Format</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> 
+                    Converts your PDF to an image-based format, making all text non-selectable and non-copyable. Perfect for protecting document content while keeping it readable.
+                </div>
+
+                <!-- PDF to Images Section -->
+                <div id="pdf2img-section">
+                    <div class="form-group">
+                        <label for="convert-pdf">Select PDF File:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="convert-pdf" accept=".pdf" />
+                            <span class="file-name" id="convert-pdf-name"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="controls-grid">
+                        <div class="form-group">
+                            <label for="convert-dpi">Quality (DPI):</label>
+                            <div class="slider-container">
+                                <input type="range" id="convert-dpi" min="72" max="600" value="300" step="50" />
+                                <span class="slider-value" id="convert-dpi-value">300</span>
+                            </div>
+                            <small style="color: #666;">Lower = smaller file, Lower quality | Higher = larger file, Better quality</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="convert-page-range">Page Range (optional):</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div style="flex: 1;">
+                                    <input type="number" id="convert-start-page" placeholder="Start (e.g., 1)" min="1" style="width: 100%;" />
+                                </div>
+                                <span style="color: #666;">to</span>
+                                <div style="flex: 1;">
+                                    <input type="number" id="convert-end-page" placeholder="End (e.g., 10)" min="1" style="width: 100%;" />
+                                </div>
+                            </div>
+                            <small style="color: #666;">Leave empty to convert all pages</small>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button onclick="convertToImagePDF()">� Make Text Non-Selectable</button>
+                        <button class="secondary-button" onclick="document.getElementById('convert-pdf').click()">📂 Browse Files</button>
+                    </div>
+                </div>
+                
+                <div class="progress-container" id="convert-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="convert-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="convert-status"></div>
+            </div>
+        </div>
+        
+        <!-- Tab 2: Overlay Logo -->
+        <div id="overlay-logo" class="tab-content">
+            <div class="tool-section">
+                <h2>Overlay Logo on PDF (with Preview)</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> Adds your logo image to one or multiple pages of a PDF with custom 
+                    positioning and sizing controls. See a live preview before processing!
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 250px; gap: 20px; align-items: start;">
+                    <div>
+                        <div class="form-group">
+                            <label for="overlay-logo-file">Select Logo Image:</label>
+                            <input type="file" id="overlay-logo-file" accept=".png,.jpg,.jpeg,.gif,.webp" />
+                            <span class="file-name" id="overlay-logo-name"></span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="overlay-pdf">Select PDF File:</label>
+                            <input type="file" id="overlay-pdf" accept=".pdf" />
+                            <span class="file-name" id="overlay-pdf-name"></span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="margin-bottom: 10px; display: block;">Logo Preview:</label>
+                        <div class="logo-preview" id="logo-preview">
+                            <span style="color: #999;">No image</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="form-group">
+                        <label for="overlay-pages">Apply to Pages:</label>
+                        <select id="overlay-pages">
+                            <option value="first">First page only</option>
+                            <option value="all">All pages</option>
+                            <option value="custom">Custom pages (comma-separated)</option>
+                        </select>
+                        <input type="text" id="overlay-custom-pages" placeholder="e.g., 1,3,5" style="display: none; margin-top: 10px;" />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="overlay-logo-size">Logo Size (inches):</label>
+                        <div class="slider-container">
+                            <input type="range" id="overlay-logo-size" min="0.5" max="4" value="2" step="0.1" />
+                            <span class="slider-value" id="overlay-logo-size-value">2.0"</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="form-group">
+                        <label for="overlay-x-offset">Horizontal Position (inches):</label>
+                        <input type="number" id="overlay-x-offset" value="3.5" step="0.1" placeholder="Center = 3.5" />
+                        <small style="color: #666;">Left = 0.5 | Center = 3.5 | Right = 6.5</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="overlay-y-offset">Vertical Position (inches):</label>
+                        <input type="number" id="overlay-y-offset" value="9.5" step="0.1" placeholder="Top = 9.5" />
+                        <small style="color: #666;">Top = 9.5 | Middle = 5.5 | Bottom = 1.5</small>
+                    </div>
+                </div>
+
+                <!-- Preview Button -->
+                <div class="button-group">
+                    <button onclick="previewOverlay()" style="background: #10b981;">👁️ Preview Overlay</button>
+                    <button onclick="overlayLogo()" style="background: #667eea;">🎨 Apply & Process</button>
+                </div>
+
+                <!-- Preview Container -->
+                <div id="overlay-preview-container" style="display: none; margin-top: 20px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 15px; background: #f9f9f9;">
+                    <h3 style="margin-bottom: 15px; color: #333;">Preview (First Page)</h3>
+                    <canvas id="overlay-preview-canvas" style="max-width: 100%; border: 1px solid #ddd; border-radius: 4px;"></canvas>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #666;">✓ This is how the logo will appear on your PDF</p>
+                </div>
+                
+                <div class="progress-container" id="overlay-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="overlay-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="overlay-status"></div>
+            </div>
+        </div>
+        
+        <!-- Tab 3: Replace Pages -->
+        <div id="replace-pages" class="tab-content">
+            <div class="tool-section">
+                <h2>Replace Page Range in PDF</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> Replaces a specific range of pages in the target PDF with pages 
+                    from a source PDF. Useful for updating specific sections.
+                </div>
+                
+                <div class="form-group">
+                    <label>📄 Source PDF (pages to extract from):</label>
+                    <input type="file" id="replace-source-pdf" accept=".pdf" />
+                    <span class="file-name" id="replace-source-pdf-name"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label>📄 Target PDF (pages to replace in):</label>
+                    <input type="file" id="replace-target-pdf" accept=".pdf" />
+                    <span class="file-name" id="replace-target-pdf-name"></span>
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="form-group">
+                        <label>Source Pages to Extract:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="replace-source-start" placeholder="Start page" min="1" value="1" />
+                            <input type="number" id="replace-source-end" placeholder="End page" min="1" value="1" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Target Pages to Replace:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="replace-target-start" placeholder="Start page" min="1" value="1" />
+                            <input type="number" id="replace-target-end" placeholder="End page" min="1" value="1" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="replacePages()">🔄 Replace Pages</button>
+                </div>
+                
+                <div class="progress-container" id="replace-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="replace-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="replace-status"></div>
+            </div>
+        </div>
+        
+        <!-- Tab 4: Insert Page -->
+        <div id="insert-page" class="tab-content">
+            <div class="tool-section">
+                <h2>Insert Pages into PDF</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> Inserts one or more pages from a source PDF into a target PDF 
+                    at a specified location.
+                </div>
+                
+                <div class="form-group">
+                    <label>📄 Source PDF (pages to insert from):</label>
+                    <input type="file" id="insert-source-pdf" accept=".pdf" />
+                    <span class="file-name" id="insert-source-pdf-name"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label>📄 Target PDF (pages to insert into):</label>
+                    <input type="file" id="insert-target-pdf" accept=".pdf" />
+                    <span class="file-name" id="insert-target-pdf-name"></span>
+                </div>
+                
+                <div class="controls-grid">
+                    <div class="form-group">
+                        <label>Pages to Insert from Source:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="insert-source-start" placeholder="Start page" min="1" value="1" />
+                            <input type="number" id="insert-source-end" placeholder="End page" min="1" value="1" />
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Insert After Page Number:</label>
+                        <input type="number" id="insert-after-page" placeholder="Insert after which page?" min="0" value="0" />
+                        <small style="color: #666;">0 = insert at beginning</small>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="insertPages()">➕ Insert Pages</button>
+                </div>
+                
+                <div class="progress-container" id="insert-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="insert-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="insert-status"></div>
+            </div>
+        </div>
+        
+        <!-- Tab 5: Document to Markdown -->
+        <div id="doc-to-md" class="tab-content">
+            <div class="tool-section">
+                <h2>Convert PDF/Word to Markdown</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> Extracts text from PDF or Word documents and converts them to Markdown format. 
+                    Perfect for creating documentation or preparing content for blogs and wikis.
+                </div>
+                
+                <div class="form-group">
+                    <label>Select PDF Document:</label>
+                    <input type="file" id="doc-input" accept=".pdf" />
+                    <span class="file-name" id="doc-input-name"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="extract-images">Include Images:</label>
+                    <input type="checkbox" id="extract-images" checked />
+                    <small style="color: #666;">Extract and embed images from the document</small>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="convertDocToMarkdown()">📝 Convert to Markdown</button>
+                </div>
+                
+                <div class="progress-container" id="doc-to-md-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="doc-to-md-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="doc-to-md-status"></div>
+                
+                <div id="markdown-preview" style="display: none; margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                    <h3>Markdown Preview:</h3>
+                    <pre id="markdown-content" style="overflow-x: auto; max-height: 300px;"></pre>
+                    <button onclick="downloadMarkdown()" class="secondary-button" style="margin-top: 10px;">⬇️ Download Markdown</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab 6: Markdown to PDF -->
+        <div id="md-to-pdf" class="tab-content">
+            <div class="tool-section">
+                <h2>Convert Markdown to PDF</h2>
+                
+                <div class="info-box">
+                    <strong>What it does:</strong> Converts Markdown files to professionally formatted PDFs. 
+                    Supports headings, lists, and basic text formatting with automatic pagination.
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Markdown File:</label>
+                    <input type="file" id="md-input" accept=".md,.markdown,.txt" />
+                    <span class="file-name" id="md-input-name"></span>
+                </div>
+                
+                <div class="button-group">
+                    <button onclick="convertMarkdownToPDF()">📄 Convert to PDF</button>
+                </div>
+                
+                <div class="progress-container" id="md-to-pdf-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="md-to-pdf-progress-fill">0%</div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="md-to-pdf-status"></div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>🔒 Privacy First PDF Utility Suite | All processing happens locally in your browser</p>
+        <p style="font-size: 0.9em; margin-top: 10px;">
+            Built with ❤️ using pdf-lib • 
+            <a href="https://github.com/Hopding/pdf-lib" style="color: inherit;">pdf-lib docs</a>
+        </p>
+    </footer>
+    
+    <script>
+        // Initialize pdf.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        let extractedMarkdown = '';
+        
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // File input handlers - Document to Markdown
+        document.getElementById('doc-input').addEventListener('change', (e) => {
+            document.getElementById('doc-input-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        // File input handlers - Markdown to PDF
+        document.getElementById('md-input').addEventListener('change', (e) => {
+            document.getElementById('md-input-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        // File input handlers
+        document.getElementById('convert-pdf').addEventListener('change', (e) => {
+            document.getElementById('convert-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        document.getElementById('overlay-logo-file').addEventListener('change', (e) => {
+            document.getElementById('overlay-logo-name').textContent = e.target.files[0]?.name || '';
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const preview = document.getElementById('logo-preview');
+                    preview.innerHTML = `<img src="${event.target.result}" alt="Logo preview" />`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById('overlay-pdf').addEventListener('change', (e) => {
+            document.getElementById('overlay-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        document.getElementById('replace-source-pdf').addEventListener('change', (e) => {
+            document.getElementById('replace-source-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        document.getElementById('replace-target-pdf').addEventListener('change', (e) => {
+            document.getElementById('replace-target-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        document.getElementById('insert-source-pdf').addEventListener('change', (e) => {
+            document.getElementById('insert-source-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        document.getElementById('insert-target-pdf').addEventListener('change', (e) => {
+            document.getElementById('insert-target-pdf-name').textContent = e.target.files[0]?.name || '';
+        });
+        
+        // DPI slider
+        document.getElementById('convert-dpi').addEventListener('input', (e) => {
+            document.getElementById('convert-dpi-value').textContent = e.target.value;
+        });
+        
+        // Logo size slider
+        document.getElementById('overlay-logo-size').addEventListener('input', (e) => {
+            document.getElementById('overlay-logo-size-value').textContent = (parseFloat(e.target.value).toFixed(1)) + '"';
+        });
+        
+        // Custom pages dropdown
+        document.getElementById('overlay-pages').addEventListener('change', (e) => {
+            document.getElementById('overlay-custom-pages').style.display = 
+                e.target.value === 'custom' ? 'block' : 'none';
+        });
+        
+        // ==================== BIDIRECTIONAL CONVERSION ====================
+        
+        // Switch between PDF to Images and Images to PDF modes
+        function switchConversionType(type) {
+            const pdf2imgBtn = document.getElementById('btn-pdf2img');
+            const img2pdfBtn = document.getElementById('btn-img2pdf');
+            const pdf2imgSection = document.getElementById('pdf2img-section');
+            const img2pdfSection = document.getElementById('img2pdf-section');
+            
+            if (type === 'pdf2img') {
+                // Show PDF to Images
+                pdf2imgSection.style.display = 'block';
+                img2pdfSection.style.display = 'none';
+                pdf2imgBtn.style.background = '#667eea';
+                pdf2imgBtn.style.color = 'white';
+                pdf2imgBtn.style.borderColor = '#667eea';
+                img2pdfBtn.style.background = 'transparent';
+                img2pdfBtn.style.color = '#667eea';
+                img2pdfBtn.style.borderColor = '#667eea';
+            } else {
+                // Show Images to PDF
+                pdf2imgSection.style.display = 'none';
+                img2pdfSection.style.display = 'block';
+                pdf2imgBtn.style.background = 'transparent';
+                pdf2imgBtn.style.color = '#667eea';
+                pdf2imgBtn.style.borderColor = '#667eea';
+                img2pdfBtn.style.background = '#667eea';
+                img2pdfBtn.style.color = 'white';
+                img2pdfBtn.style.borderColor = '#667eea';
+                // Update image list when switching to this mode
+                updateImageList();
+            }
+        }
+        
+        // Update and display image list with file names
+        function updateImageList() {
+            const imageInput = document.getElementById('convert-images');
+            const imageList = document.getElementById('image-list');
+            const files = imageInput.files;
+            
+            imageList.innerHTML = '';
+            
+            if (files.length === 0) {
+                imageList.innerHTML = '<p style="color: #999; font-size: 0.9em; margin: 0;">No images selected</p>';
+                return;
+            }
+            
+            for (let i = 0; i < files.length; i++) {
+                const fileItem = document.createElement('div');
+                fileItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid #e0e0e0; font-size: 0.9em;';
+                
+                const fileInfo = document.createElement('div');
+                fileInfo.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis;';
+                fileInfo.textContent = `${i + 1}. ${files[i].name}`;
+                
+                const fileSize = document.createElement('span');
+                fileSize.style.cssText = 'font-size: 0.8em; color: #999; margin-left: 10px; white-space: nowrap;';
+                fileSize.textContent = `(${(files[i].size / 1024).toFixed(1)} KB)`;
+                
+                fileItem.appendChild(fileInfo);
+                fileItem.appendChild(fileSize);
+                imageList.appendChild(fileItem);
+            }
+        }
+        
+        // Handle image file selection
+        document.getElementById('convert-images').addEventListener('change', updateImageList);
+        
+        // Convert multiple images to PDF
+        async function convertImagesToPDF() {
+            const imageInput = document.getElementById('convert-images');
+            const files = imageInput.files;
+            
+            if (files.length === 0) {
+                showStatus('convert-status', 'error', 'Please select at least one image file');
+                return;
+            }
+            
+            try {
+                showStatus('convert-status', 'info', `Processing ${files.length} image(s)...`);
+                document.getElementById('convert-progress').style.display = 'block';
+                
+                const { PDFDocument } = PDFLib;
+                const newPdf = await PDFDocument.create();
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const progress = Math.round(((i + 1) / files.length) * 100);
+                    updateProgress('convert-progress-fill', progress);
+                    
+                    let embeddedImage;
+                    const fileType = file.type.toLowerCase();
+                    
+                    try {
+                        if (fileType === 'image/png') {
+                            const imageData = await file.arrayBuffer();
+                            embeddedImage = await newPdf.embedPng(imageData);
+                        } else if (fileType === 'image/jpeg' || fileType === 'image/jpg') {
+                            const imageData = await file.arrayBuffer();
+                            embeddedImage = await newPdf.embedJpg(imageData);
+                        } else if (fileType === 'image/gif' || fileType === 'image/webp') {
+                            // For GIF and WebP, convert to PNG first using canvas
+                            embeddedImage = await convertImageToPngAndEmbed(file, newPdf);
+                        } else {
+                            throw new Error(`Unsupported image format: ${fileType}`);
+                        }
+                    } catch (fileError) {
+                        throw new Error(`Error processing ${file.name}: ${fileError.message}`);
+                    }
+                    
+                    // Add page to PDF with image dimensions
+                    const pdfPage = newPdf.addPage([embeddedImage.width, embeddedImage.height]);
+                    pdfPage.drawImage(embeddedImage, {
+                        x: 0,
+                        y: 0,
+                        width: embeddedImage.width,
+                        height: embeddedImage.height
+                    });
+                }
+                
+                // Save and download PDF
+                const pdfBytes = await newPdf.save();
+                const timestamp = new Date().toISOString().slice(0, 10);
+                downloadPDF(pdfBytes, `combined_images_${timestamp}.pdf`);
+                showStatus('convert-status', 'success', `✓ Successfully created PDF from ${files.length} image(s)!`);
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('convert-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('convert-progress').style.display = 'none';
+            }
+        }
+        
+        // Helper function to convert image to PNG and embed in PDF
+        async function convertImageToPngAndEmbed(file, pdfDoc) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = async () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            const imageData = canvas.toDataURL('image/png');
+                            const imageBytes = await fetch(imageData).then(res => res.arrayBuffer());
+                            const embeddedImage = await pdfDoc.embedPng(imageBytes);
+                            resolve(embeddedImage);
+                        } catch (error) {
+                            reject(new Error(`Failed to process image: ${error.message}`));
+                        }
+                    };
+                    img.onerror = () => reject(new Error(`Failed to load image: ${file.name}`));
+                    img.src = event.target.result;
+                };
+                reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        // ==================== OVERLAY LOGO PREVIEW ====================
+        
+        // Preview the logo overlay on the first page
+        async function previewOverlay() {
+            const logoFile = document.getElementById('overlay-logo-file').files[0];
+            const pdfFile = document.getElementById('overlay-pdf').files[0];
+            
+            if (!logoFile || !pdfFile) {
+                showStatus('overlay-status', 'error', 'Please select both logo and PDF files');
+                return;
+            }
+            
+            try {
+                showStatus('overlay-status', 'info', 'Generating preview...');
+                
+                const logoSize = parseFloat(document.getElementById('overlay-logo-size').value);
+                const xOffset = document.getElementById('overlay-x-offset').value ? 
+                    parseFloat(document.getElementById('overlay-x-offset').value) : 3.5;
+                const yOffset = document.getElementById('overlay-y-offset').value ? 
+                    parseFloat(document.getElementById('overlay-y-offset').value) : 9.5;
+                
+                const { PDFDocument } = PDFLib;
+                const pdfBytes = await pdfFile.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(pdfBytes);
+                
+                const pages = pdfDoc.getPages();
+                if (pages.length === 0) {
+                    showStatus('overlay-status', 'error', 'PDF has no pages');
+                    return;
+                }
+                
+                // Get first page dimensions
+                const firstPage = pages[0];
+                const pageWidth = firstPage.getWidth();
+                const pageHeight = firstPage.getHeight();
+                
+                // Render first page to canvas using pdf.js
+                const arrayBuffer = await pdfFile.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const page = await pdf.getPage(1);
+                const scale = 1.5;
+                const viewport = page.getViewport({ scale: scale });
+                
+                const canvas = document.getElementById('overlay-preview-canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+                
+                // Draw logo on canvas
+                const logoData = await logoFile.arrayBuffer();
+                const logoImage = new Image();
+                
+                logoImage.onload = () => {
+                    const logoWidthInches = logoSize;
+                    const logoHeightInches = (logoImage.height / logoImage.width) * logoWidthInches;
+                    
+                    // Convert inches to pixels at current scale
+                    const logoWidthPixels = logoWidthInches * 72 * scale;
+                    const logoHeightPixels = logoHeightInches * 72 * scale;
+                    
+                    const xOffsetPixels = xOffset * 72 * scale;
+                    const yOffsetPixels = yOffset * 72 * scale;
+                    
+                    // Draw logo on canvas
+                    context.drawImage(logoImage, 
+                        xOffsetPixels, 
+                        canvas.height - yOffsetPixels - logoHeightPixels,
+                        logoWidthPixels, 
+                        logoHeightPixels
+                    );
+                    
+                    // Show preview container
+                    document.getElementById('overlay-preview-container').style.display = 'block';
+                    showStatus('overlay-status', 'success', '✓ Preview generated! Check below to see how the logo will appear.');
+                };
+                
+                logoImage.onerror = () => {
+                    showStatus('overlay-status', 'error', 'Failed to load logo image');
+                };
+                
+                const logoDataUrl = URL.createObjectURL(logoFile);
+                logoImage.src = logoDataUrl;
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('overlay-status', 'error', `Error: ${error.message}`);
+            }
+        }
+        
+        // Update preview when settings change
+        function updateOverlayPreview() {
+            // Only update if preview container is visible
+            if (document.getElementById('overlay-preview-container').style.display !== 'none') {
+                previewOverlay();
+            }
+        }
+        
+        // Add event listeners for overlay settings to update preview in real-time
+        document.getElementById('overlay-logo-size').addEventListener('input', updateOverlayPreview);
+        document.getElementById('overlay-x-offset').addEventListener('change', updateOverlayPreview);
+        document.getElementById('overlay-y-offset').addEventListener('change', updateOverlayPreview);
+        
+        // ==================== CONVERT TO IMAGE PDF ====================
+        async function convertToImagePDF() {
+            const file = document.getElementById('convert-pdf').files[0];
+            if (!file) {
+                showStatus('convert-status', 'error', 'Please select a PDF file');
+                return;
+            }
+            
+            const dpi = parseInt(document.getElementById('convert-dpi').value);
+            const startPage = document.getElementById('convert-start-page').value ? 
+                parseInt(document.getElementById('convert-start-page').value) : null;
+            const endPage = document.getElementById('convert-end-page').value ? 
+                parseInt(document.getElementById('convert-end-page').value) : null;
+            
+            try {
+                showStatus('convert-status', 'info', 'Loading PDF...');
+                document.getElementById('convert-progress').style.display = 'block';
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                
+                const totalPages = pdf.numPages;
+                const first = startPage || 1;
+                const last = endPage || totalPages;
+                
+                if (first > totalPages || last > totalPages || first > last) {
+                    showStatus('convert-status', 'error', `Invalid page range. PDF has ${totalPages} pages.`);
+                    return;
+                }
+                
+                const { PDFDocument } = PDFLib;
+                const newPdf = await PDFDocument.create();
+                
+                // Get original PDF page dimensions to maintain aspect ratio
+                const originalPages = pdfLibDoc.getPages();
+                
+                for (let pageNum = first; pageNum <= last; pageNum++) {
+                    const progress = Math.round(((pageNum - first + 1) / (last - first + 1)) * 100);
+                    updateProgress('convert-progress-fill', progress);
+                    
+                    const page = await pdf.getPage(pageNum);
+                    const originalPage = originalPages[pageNum - 1];
+                    const originalWidth = originalPage.getWidth();
+                    const originalHeight = originalPage.getHeight();
+                    
+                    // Render at requested DPI for quality
+                    const scale = dpi / 72;
+                    const viewport = page.getViewport({ scale: scale });
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    
+                    await page.render({
+                        canvasContext: context,
+                        viewport: viewport
+                    }).promise;
+                    
+                    const imageData = canvas.toDataURL('image/png');
+                    
+                    // Create PDF page with original dimensions (in points), not canvas pixel dimensions
+                    const embeddedImage = await newPdf.embedPng(imageData);
+                    const pdfPage = newPdf.addPage([originalWidth, originalHeight]);
+                    
+                    // Draw image to fill the page while maintaining aspect ratio
+                    pdfPage.drawImage(embeddedImage, {
+                        x: 0,
+                        y: 0,
+                        width: originalWidth,
+                        height: originalHeight
+                    });
+                }
+                
+                const pdfBytes = await newPdf.save();
+                downloadPDF(pdfBytes, file.name.replace('.pdf', '_NoText.pdf'));
+                showStatus('convert-status', 'success', `✓ Successfully converted ${last - first + 1} pages! All text is now non-selectable.`);
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('convert-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('convert-progress').style.display = 'none';
+            }
+        }
+        
+        // ==================== OVERLAY LOGO ====================
+        async function overlayLogo() {
+            const logoFile = document.getElementById('overlay-logo-file').files[0];
+            const pdfFile = document.getElementById('overlay-pdf').files[0];
+            
+            if (!logoFile || !pdfFile) {
+                showStatus('overlay-status', 'error', 'Please select both logo and PDF files');
+                return;
+            }
+            
+            const pageSelection = document.getElementById('overlay-pages').value;
+            const logoSize = parseFloat(document.getElementById('overlay-logo-size').value);
+            const xOffset = document.getElementById('overlay-x-offset').value ? 
+                parseFloat(document.getElementById('overlay-x-offset').value) : 3.5;
+            const yOffset = document.getElementById('overlay-y-offset').value ? 
+                parseFloat(document.getElementById('overlay-y-offset').value) : 9.5;
+            
+            try {
+                showStatus('overlay-status', 'info', 'Processing...');
+                document.getElementById('overlay-progress').style.display = 'block';
+                updateProgress('overlay-progress-fill', 30);
+                
+                const { PDFDocument } = PDFLib;
+                const pdfBytes = await pdfFile.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(pdfBytes);
+                
+                const logoData = await logoFile.arrayBuffer();
+                let logoImage;
+                if (logoFile.type === 'image/png') {
+                    logoImage = await pdfDoc.embedPng(logoData);
+                } else {
+                    logoImage = await pdfDoc.embedJpg(logoData);
+                }
+                
+                updateProgress('overlay-progress-fill', 50);
+                
+                const pages = pdfDoc.getPages();
+                const pagesToModify = [];
+                
+                if (pageSelection === 'first') {
+                    pagesToModify.push(0);
+                } else if (pageSelection === 'all') {
+                    pagesToModify.push(...pages.map((_, i) => i));
+                } else if (pageSelection === 'custom') {
+                    const customPages = document.getElementById('overlay-custom-pages').value
+                        .split(',')
+                        .map(p => parseInt(p.trim()) - 1)
+                        .filter(p => p >= 0 && p < pages.length);
+                    pagesToModify.push(...customPages);
+                }
+                
+                const logoWidthInches = logoSize;
+                const logoWidthPoints = logoWidthInches * 72;
+                const logoHeightPoints = (logoImage.height / logoImage.width) * logoWidthPoints;
+                
+                const xOffsetPoints = xOffset * 72;
+                const yOffsetPoints = yOffset * 72;
+                
+                pagesToModify.forEach((pageIndex, idx) => {
+                    const page = pages[pageIndex];
+                    page.drawImage(logoImage, {
+                        x: xOffsetPoints,
+                        y: page.getHeight() - yOffsetPoints - logoHeightPoints,
+                        width: logoWidthPoints,
+                        height: logoHeightPoints
+                    });
+                    
+                    updateProgress('overlay-progress-fill', 50 + (idx / pagesToModify.length * 50));
+                });
+                
+                updateProgress('overlay-progress-fill', 100);
+                const modifiedPdf = await pdfDoc.save();
+                downloadPDF(modifiedPdf, pdfFile.name.replace('.pdf', '_WithLogo.pdf'));
+                showStatus('overlay-status', 'success', `✓ Logo applied to ${pagesToModify.length} page(s)!`);
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('overlay-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('overlay-progress').style.display = 'none';
+            }
+        }
+        
+        // Helper function to copy bookmarks/outlines and adjust page references
+        async function copyBookmarkRecursive(outline, newPdf, sourcePdf, pageOffset, rangeStart, rangeEnd, additionalOffset = 0) {
+            try {
+                // Direct access to outline's internal destination if available
+                if (outline.dest && outline.dest.length > 0) {
+                    const destPageIndex = outline.dest[0];
+                    
+                    // Check if this bookmark's target page is in the range we're copying
+                    if (destPageIndex >= rangeStart && destPageIndex <= rangeEnd) {
+                        const newPageIndex = pageOffset + (destPageIndex - rangeStart) + additionalOffset;
+                        const title = outline.title || 'Bookmark';
+                        
+                        try {
+                            newPdf.outline.push({
+                                title,
+                                target: newPageIndex,
+                                color: outline.color,
+                                bold: outline.bold,
+                                italic: outline.italic,
+                                children: []
+                            });
+                        } catch (e) {
+                            console.warn('Could not add outline entry:', e);
+                        }
+                    }
+                }
+                
+                // Recursively process child bookmarks
+                if (outline.children && outline.children.length > 0) {
+                    for (const child of outline.children) {
+                        await copyBookmarkRecursive(child, newPdf, sourcePdf, pageOffset, rangeStart, rangeEnd, additionalOffset);
+                    }
+                }
+            } catch (e) {
+                console.warn('Error processing bookmark:', e);
+            }
+        }
+        
+        // Helper function to copy all bookmarks from source PDF to target, adjusting page numbers
+        async function copyAndAdjustBookmarks(sourceOutline, newPdf, oldPageIndexToNewPageIndex) {
+            try {
+                // oldPageIndexToNewPageIndex is a map: oldIndex -> newIndex
+                if (!sourceOutline || sourceOutline.length === 0) return;
+                
+                for (const outline of sourceOutline) {
+                    copyBookmarkWithAdjustment(outline, newPdf, oldPageIndexToNewPageIndex);
+                }
+            } catch (e) {
+                console.warn('Error copying bookmarks:', e);
+            }
+        }
+        
+        function copyBookmarkWithAdjustment(outline, newPdf, pageIndexMap) {
+            try {
+                if (outline.dest && outline.dest.length > 0) {
+                    const oldPageIndex = outline.dest[0];
+                    const newPageIndex = pageIndexMap[oldPageIndex];
+                    
+                    // Only add if this page is in our map (i.e., it was copied)
+                    if (newPageIndex !== undefined) {
+                        const title = outline.title || 'Bookmark';
+                        try {
+                            newPdf.outline.push({
+                                title,
+                                target: newPageIndex,
+                                color: outline.color,
+                                bold: outline.bold,
+                                italic: outline.italic,
+                                children: []
+                            });
+                        } catch (e) {
+                            console.warn('Could not add outline entry:', e);
+                        }
+                    }
+                }
+                
+                // Recursively process children
+                if (outline.children && outline.children.length > 0) {
+                    for (const child of outline.children) {
+                        copyBookmarkWithAdjustment(child, newPdf, pageIndexMap);
+                    }
+                }
+            } catch (e) {
+                console.warn('Error processing bookmark:', e);
+            }
+        }
+        
+        // Note: Link annotations cannot be reliably preserved with pdf-lib
+        // This is a known limitation of JavaScript PDF libraries
+        // For full annotation support, consider using a Python backend
+        
+        // ==================== REPLACE PAGES ====================
+        async function replacePages() {
+            const sourceFile = document.getElementById('replace-source-pdf').files[0];
+            const targetFile = document.getElementById('replace-target-pdf').files[0];
+            
+            if (!sourceFile || !targetFile) {
+                showStatus('replace-status', 'error', 'Please select both source and target PDF files');
+                return;
+            }
+            
+            const srcStart = parseInt(document.getElementById('replace-source-start').value);
+            const srcEnd = parseInt(document.getElementById('replace-source-end').value);
+            const tgtStart = parseInt(document.getElementById('replace-target-start').value);
+            const tgtEnd = parseInt(document.getElementById('replace-target-end').value);
+            
+            if (isNaN(srcStart) || isNaN(srcEnd) || isNaN(tgtStart) || isNaN(tgtEnd) || srcStart < 1 || tgtStart < 1) {
+                showStatus('replace-status', 'error', 'Please fill in all page range values with valid numbers (starting from 1)');
+                return;
+            }
+            
+            try {
+                showStatus('replace-status', 'info', 'Processing...');
+                document.getElementById('replace-progress').style.display = 'block';
+                
+                const { PDFDocument } = PDFLib;
+                
+                const sourceBytes = await sourceFile.arrayBuffer();
+                const sourcePdf = await PDFDocument.load(sourceBytes);
+                
+                const targetBytes = await targetFile.arrayBuffer();
+                const targetPdf = await PDFDocument.load(targetBytes);
+                
+                const targetPages = targetPdf.getPages();
+                const sourcePages = sourcePdf.getPages();
+                
+                if (srcStart > sourcePages.length || srcEnd > sourcePages.length) {
+                    showStatus('replace-status', 'error', `Source PDF only has ${sourcePages.length} pages`);
+                    return;
+                }
+                
+                if (tgtStart > targetPages.length || tgtEnd > targetPages.length) {
+                    showStatus('replace-status', 'error', `Target PDF only has ${targetPages.length} pages`);
+                    return;
+                }
+                
+                updateProgress('replace-progress-fill', 30);
+                
+                const newPdf = await PDFDocument.create();
+                
+                // Add pages before target range
+                const pagesBefore = [];
+                for (let i = 0; i < tgtStart - 1; i++) {
+                    pagesBefore.push(i);
+                }
+                if (pagesBefore.length > 0) {
+                    const copiedPagesBefore = await newPdf.copyPages(targetPdf, pagesBefore);
+                    copiedPagesBefore.forEach(page => newPdf.addPage(page));
+                }
+                
+                updateProgress('replace-progress-fill', 60);
+                
+                // Add replacement pages from source
+                const numToReplace = Math.min(srcEnd - srcStart + 1, tgtEnd - tgtStart + 1);
+                const pagesReplace = [];
+                for (let i = 0; i < numToReplace; i++) {
+                    pagesReplace.push(srcStart - 1 + i);
+                }
+                const copiedPagesReplace = await newPdf.copyPages(sourcePdf, pagesReplace);
+                copiedPagesReplace.forEach(page => newPdf.addPage(page));
+                
+                updateProgress('replace-progress-fill', 80);
+                
+                // Add pages after target range
+                const pagesAfter = [];
+                for (let i = tgtEnd; i < targetPages.length; i++) {
+                    pagesAfter.push(i);
+                }
+                if (pagesAfter.length > 0) {
+                    const copiedPagesAfter = await newPdf.copyPages(targetPdf, pagesAfter);
+                    copiedPagesAfter.forEach(page => newPdf.addPage(page));
+                }
+                
+                updateProgress('replace-progress-fill', 100);
+                
+                // Build a map of old page indices to new page indices for bookmark adjustment
+                const pageIndexMap = {};
+                let newPageIndex = 0;
+                
+                // Pages before replacement stay in same position
+                for (let i = 0; i < tgtStart - 1; i++) {
+                    pageIndexMap[i] = newPageIndex++;
+                }
+                
+                // Replacement pages from source (in new positions)
+                for (let i = 0; i < numToReplace; i++) {
+                    pageIndexMap[(tgtStart - 1 + i)] = newPageIndex++;
+                }
+                
+                // Pages after replacement (adjusted for the difference in page count)
+                const pageDifference = numToReplace - (tgtEnd - tgtStart + 1);
+                for (let i = tgtEnd; i < targetPages.length; i++) {
+                    pageIndexMap[i] = newPageIndex++;
+                }
+                
+                // Copy bookmarks from target PDF with adjusted page references
+                const targetOutlines = targetPdf.outline;
+                if (targetOutlines && targetOutlines.length > 0) {
+                    try {
+                        copyAndAdjustBookmarks(targetOutlines, newPdf, pageIndexMap);
+                    } catch (e) {
+                        console.warn('Could not copy bookmarks from target PDF:', e);
+                    }
+                }
+                
+                // Copy bookmarks from source PDF for replacement pages
+                const sourceOutlines = sourcePdf.outline;
+                if (sourceOutlines && sourceOutlines.length > 0) {
+                    try {
+                        // Map source page indices to their new positions
+                        const sourcePageIndexMap = {};
+                        for (let i = srcStart - 1; i < srcEnd; i++) {
+                            sourcePageIndexMap[i] = pageIndexMap[tgtStart - 1 + (i - (srcStart - 1))];
+                        }
+                        copyAndAdjustBookmarks(sourceOutlines, newPdf, sourcePageIndexMap);
+                    } catch (e) {
+                        console.warn('Could not copy bookmarks from source PDF:', e);
+                    }
+                }
+                
+                // Adjust internal link annotations to maintain clickable TOC links
+                try {
+                    // Recreate links for target PDF pages
+                    await recreateLinksWithPageMapping(newPdf, targetPdf, pageIndexMap);
+                    
+                    // Recreate links for source PDF pages
+                    const sourcePageIndexMap = {};
+                    for (let i = srcStart - 1; i < srcEnd; i++) {
+                        sourcePageIndexMap[i] = pageIndexMap[tgtStart - 1 + (i - (srcStart - 1))];
+                    }
+                    await recreateLinksWithPageMapping(newPdf, sourcePdf, sourcePageIndexMap);
+                } catch (e) {
+                    console.warn('Could not recreate link annotations:', e);
+                }
+                
+                const resultPdf = await newPdf.save();
+                downloadPDF(resultPdf, 'merged_document.pdf');
+                showStatus('replace-status', 'success', `✓ Successfully replaced pages ${tgtStart}-${tgtStart + numToReplace - 1}!`);
+                showStatus('replace-status', 'info', 'Note: PDF annotations/links may not be preserved. For full annotation support, use a Python backend.');
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('replace-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('replace-progress').style.display = 'none';
+            }
+        }
+        
+        // ==================== INSERT PAGE ====================
+        async function insertPages() {
+            const sourceFile = document.getElementById('insert-source-pdf').files[0];
+            const targetFile = document.getElementById('insert-target-pdf').files[0];
+            
+            if (!sourceFile || !targetFile) {
+                showStatus('insert-status', 'error', 'Please select both source and target PDF files');
+                return;
+            }
+            
+            const srcStart = parseInt(document.getElementById('insert-source-start').value);
+            const srcEnd = parseInt(document.getElementById('insert-source-end').value);
+            const insertAfter = parseInt(document.getElementById('insert-after-page').value);
+            
+            if (isNaN(srcStart) || isNaN(srcEnd) || isNaN(insertAfter) || srcStart < 1 || insertAfter < 0) {
+                showStatus('insert-status', 'error', 'Please fill in all page values with valid numbers');
+                return;
+            }
+            
+            try {
+                showStatus('insert-status', 'info', 'Processing...');
+                document.getElementById('insert-progress').style.display = 'block';
+                
+                const { PDFDocument } = PDFLib;
+                
+                const sourceBytes = await sourceFile.arrayBuffer();
+                const sourcePdf = await PDFDocument.load(sourceBytes);
+                
+                const targetBytes = await targetFile.arrayBuffer();
+                const targetPdf = await PDFDocument.load(targetBytes);
+                
+                const targetPages = targetPdf.getPages();
+                const sourcePages = sourcePdf.getPages();
+                
+                if (srcStart > sourcePages.length || srcEnd > sourcePages.length) {
+                    showStatus('insert-status', 'error', `Source PDF only has ${sourcePages.length} pages`);
+                    return;
+                }
+                
+                if (insertAfter > targetPages.length) {
+                    showStatus('insert-status', 'error', `Target PDF only has ${targetPages.length} pages`);
+                    return;
+                }
+                
+                updateProgress('insert-progress-fill', 30);
+                
+                const newPdf = await PDFDocument.create();
+                
+                // Add pages from target before insertion point
+                const pagesBefore = [];
+                for (let i = 0; i < insertAfter; i++) {
+                    pagesBefore.push(i);
+                }
+                if (pagesBefore.length > 0) {
+                    const copiedPagesBefore = await newPdf.copyPages(targetPdf, pagesBefore);
+                    copiedPagesBefore.forEach(page => newPdf.addPage(page));
+                }
+                
+                updateProgress('insert-progress-fill', 60);
+                
+                // Add pages from source
+                const numToInsert = srcEnd - srcStart + 1;
+                const pagesToInsert = [];
+                for (let i = 0; i < numToInsert; i++) {
+                    pagesToInsert.push(srcStart - 1 + i);
+                }
+                const copiedPagesToInsert = await newPdf.copyPages(sourcePdf, pagesToInsert);
+                copiedPagesToInsert.forEach(page => newPdf.addPage(page));
+                
+                updateProgress('insert-progress-fill', 80);
+                
+                // Add remaining pages from target
+                const pagesAfter = [];
+                for (let i = insertAfter; i < targetPages.length; i++) {
+                    pagesAfter.push(i);
+                }
+                if (pagesAfter.length > 0) {
+                    const copiedPagesAfter = await newPdf.copyPages(targetPdf, pagesAfter);
+                    copiedPagesAfter.forEach(page => newPdf.addPage(page));
+                }
+                
+                updateProgress('insert-progress-fill', 100);
+                
+                // Build a map of old page indices to new page indices for bookmark adjustment
+                const pageIndexMap = {};
+                let newPageIndex = 0;
+                
+                // Pages before insertion stay in same position
+                for (let i = 0; i < insertAfter; i++) {
+                    pageIndexMap[i] = newPageIndex++;
+                }
+                
+                // Inserted pages from source
+                for (let i = srcStart - 1; i < srcEnd; i++) {
+                    pageIndexMap[(i + 1000)] = newPageIndex++; // Use offset key for source pages to avoid conflicts
+                }
+                
+                // Pages after insertion point (shifted forward)
+                for (let i = insertAfter; i < targetPages.length; i++) {
+                    pageIndexMap[i] = newPageIndex++;
+                }
+                
+                // Copy bookmarks from target PDF with adjusted page references
+                const targetOutlines = targetPdf.outline;
+                if (targetOutlines && targetOutlines.length > 0) {
+                    try {
+                        copyAndAdjustBookmarks(targetOutlines, newPdf, pageIndexMap);
+                    } catch (e) {
+                        console.warn('Could not copy bookmarks from target PDF:', e);
+                    }
+                }
+                
+                // Copy bookmarks from source PDF for inserted pages
+                const sourceOutlines = sourcePdf.outline;
+                if (sourceOutlines && sourceOutlines.length > 0) {
+                    try {
+                        // Map source page indices to their new positions
+                        const sourcePageIndexMap = {};
+                        for (let i = srcStart - 1; i < srcEnd; i++) {
+                            sourcePageIndexMap[i] = pageIndexMap[(i + 1000)];
+                        }
+                        copyAndAdjustBookmarks(sourceOutlines, newPdf, sourcePageIndexMap);
+                    } catch (e) {
+                        console.warn('Could not copy bookmarks from source PDF:', e);
+                    }
+                }
+                
+                // Adjust internal link annotations to maintain clickable TOC links
+                try {
+                    // Recreate links for target PDF pages
+                    await recreateLinksWithPageMapping(newPdf, targetPdf, pageIndexMap);
+                    
+                    // Recreate links for source PDF pages
+                    const sourcePageIndexMap = {};
+                    for (let i = srcStart - 1; i < srcEnd; i++) {
+                        sourcePageIndexMap[i] = pageIndexMap[(i + 1000)];
+                    }
+                    await recreateLinksWithPageMapping(newPdf, sourcePdf, sourcePageIndexMap);
+                } catch (e) {
+                    console.warn('Could not recreate link annotations:', e);
+                }
+                
+                const resultPdf = await newPdf.save();
+                downloadPDF(resultPdf, 'merged_with_inserted_pages.pdf');
+                showStatus('insert-status', 'success', `✓ Successfully inserted ${numToInsert} page(s) after page ${insertAfter}!`);
+                showStatus('insert-status', 'info', 'Note: PDF annotations/links may not be preserved. For full annotation support, use a Python backend.');
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('insert-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('insert-progress').style.display = 'none';
+            }
+        }
+        
+        // ==================== DOCUMENT TO MARKDOWN ====================
+        async function convertDocToMarkdown() {
+            const fileInput = document.getElementById('doc-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showStatus('doc-to-md-status', 'error', 'Please select a PDF document');
+                return;
+            }
+            
+            const extractImages = document.getElementById('extract-images').checked;
+            
+            try {
+                showStatus('doc-to-md-status', 'info', 'Processing...');
+                document.getElementById('doc-to-md-progress').style.display = 'block';
+                updateProgress('doc-to-md-progress-fill', 20);
+                
+                let markdown = '';
+                
+                if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+                    markdown = await extractFromPDF(file, extractImages);
+                } else {
+                    showStatus('doc-to-md-status', 'error', 'Please use a PDF document. Word document support is not available.');
+                    return;
+                }
+                
+                updateProgress('doc-to-md-progress-fill', 90);
+                
+                extractedMarkdown = markdown;
+                document.getElementById('markdown-content').textContent = markdown;
+                document.getElementById('markdown-preview').style.display = 'block';
+                
+                updateProgress('doc-to-md-progress-fill', 100);
+                showStatus('doc-to-md-status', 'success', '✓ Successfully converted to Markdown!');
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('doc-to-md-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('doc-to-md-progress').style.display = 'none';
+            }
+        }
+        
+        async function extractFromPDF(file, extractImages) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let markdown = `# ${file.name.replace('.pdf', '')}\n\n`;
+                
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    
+                    // Extract text with basic formatting
+                    let pageText = '';
+                    let currentLine = '';
+                    let lastY = null;
+                    
+                    textContent.items.forEach((item, index) => {
+                        if (lastY !== null && Math.abs(item.y - lastY) > 5) {
+                            if (currentLine.trim()) {
+                                pageText += currentLine.trim() + '\n';
+                            }
+                            currentLine = '';
+                        }
+                        
+                        // Detect potential headings (larger font sizes)
+                        if (item.height && item.height > 14 && item.str.length > 0) {
+                            if (currentLine.trim()) pageText += currentLine.trim() + '\n';
+                            currentLine = '## ' + item.str + ' ';
+                        } else {
+                            currentLine += item.str;
+                        }
+                        lastY = item.y;
+                    });
+                    
+                    if (currentLine.trim()) {
+                        pageText += currentLine.trim();
+                    }
+                    
+                    if (pageText.trim()) {
+                        markdown += `\n### Page ${pageNum}\n\n${pageText}\n`;
+                    }
+                }
+                
+                return markdown;
+            } catch (error) {
+                throw new Error(`Failed to extract from PDF: ${error.message}`);
+            }
+        }
+        
+        function downloadMarkdown() {
+            if (!extractedMarkdown) {
+                showStatus('doc-to-md-status', 'error', 'No markdown content to download');
+                return;
+            }
+            
+            const element = document.createElement('a');
+            const file = new Blob([extractedMarkdown], { type: 'text/markdown' });
+            element.href = URL.createObjectURL(file);
+            element.download = 'document.md';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+            
+            showStatus('doc-to-md-status', 'success', '✓ Markdown file downloaded!');
+        }
+        
+        // ==================== MARKDOWN TO PDF ====================
+        async function convertMarkdownToPDF() {
+            const fileInput = document.getElementById('md-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showStatus('md-to-pdf-status', 'error', 'Please select a Markdown file');
+                return;
+            }
+            
+            try {
+                showStatus('md-to-pdf-status', 'info', 'Processing...');
+                document.getElementById('md-to-pdf-progress').style.display = 'block';
+                updateProgress('md-to-pdf-progress-fill', 30);
+                
+                // Read markdown file
+                const text = await file.text();
+                updateProgress('md-to-pdf-progress-fill', 50);
+                
+                // Parse markdown and create PDF
+                const { PDFDocument, PDFName, rgb } = PDFLib;
+                const pdfDoc = await PDFDocument.create();
+                
+                // Add page
+                const page = pdfDoc.addPage([612, 792]); // Letter size
+                const { height } = page.getSize();
+                
+                // Parse markdown and add to PDF
+                const lines = text.split('\n');
+                let yPosition = height - 50;
+                const fontSize = 12;
+                const titleFontSize = 16;
+                const headingFontSize = 14;
+                
+                for (const line of lines) {
+                    if (line.trim() === '') {
+                        yPosition -= 10;
+                        continue;
+                    }
+                    
+                    let text = line;
+                    let fontSize_used = fontSize;
+                    let isBold = false;
+                    let color = rgb(0, 0, 0);
+                    
+                    // Detect heading level
+                    if (line.startsWith('# ')) {
+                        text = line.substring(2);
+                        fontSize_used = titleFontSize;
+                        isBold = true;
+                        color = rgb(0.2, 0.2, 0.8); // Blue for titles
+                    } else if (line.startsWith('## ')) {
+                        text = line.substring(3);
+                        fontSize_used = headingFontSize;
+                        isBold = true;
+                        color = rgb(0.4, 0.4, 0.8); // Lighter blue for headings
+                    } else if (line.startsWith('### ')) {
+                        text = line.substring(4);
+                        fontSize_used = headingFontSize;
+                        color = rgb(0.4, 0.4, 0.8);
+                    } else if (line.startsWith('- ')) {
+                        text = '• ' + line.substring(2);
+                    }
+                    
+                    // Check if we need a new page
+                    if (yPosition < 50) {
+                        yPosition = height - 50;
+                        pdfDoc.addPage([612, 792]);
+                    }
+                    
+                    // Draw text on PDF
+                    try {
+                        page.drawText(text, {
+                            x: 50,
+                            y: yPosition,
+                            size: fontSize_used,
+                            color: color,
+                        });
+                    } catch (e) {
+                        // Skip lines that can't be rendered
+                    }
+                    
+                    yPosition -= fontSize_used + 5;
+                }
+                
+                updateProgress('md-to-pdf-progress-fill', 80);
+                
+                const pdfBytes = await pdfDoc.save();
+                downloadPDF(pdfBytes, file.name.replace('.md', '.pdf'));
+                
+                updateProgress('md-to-pdf-progress-fill', 100);
+                showStatus('md-to-pdf-status', 'success', '✓ Successfully converted to PDF!');
+                
+            } catch (error) {
+                console.error(error);
+                showStatus('md-to-pdf-status', 'error', `Error: ${error.message}`);
+            } finally {
+                document.getElementById('md-to-pdf-progress').style.display = 'none';
+            }
+        }
+        
+        // ==================== UTILITIES ====================
+        
+        function showStatus(elementId, type, message) {
+            const element = document.getElementById(elementId);
+            element.className = `status-message ${type}`;
+            element.textContent = message;
+        }
+        
+        function updateProgress(elementId, percent) {
+            const element = document.getElementById(elementId);
+            element.style.width = percent + '%';
+            element.textContent = percent + '%';
+        }
+        
+        function downloadPDF(pdfBytes, filename) {
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
